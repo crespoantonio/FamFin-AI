@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: famfin-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-famfin_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-famfin_password}
+      POSTGRES_DB: ${POSTGRES_DB:-famfin_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-famfin_user} -d ${POSTGRES_DB:-famfin_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: famfin-app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-famfin_user}:${POSTGRES_PASSWORD:-famfin_password}@db:5432/${POSTGRES_DB:-famfin_db}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
