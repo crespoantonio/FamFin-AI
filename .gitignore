@@ -40,7 +40,6 @@ coverage.xml
 
 # Project Specific (BMad and Agents)
 _bmad/
-_bmad-output/
 .agent/
 .agents/
 
