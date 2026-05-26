@@ -46,7 +46,7 @@ development_status:
   1-1-project-initialization-containerized-environment: done
   1-2-application-level-aes-256-encryption-service: done
   1-3-multi-tenant-database-schema-sqlmodel: done
-  1-4-telegram-gateway-registration-flow: done
+  1-4-generic-messaging-api-registration-flow: in-progress
   epic-1-retrospective: optional
 
   epic-2: backlog

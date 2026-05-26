@@ -21,11 +21,11 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Requirements Overview
 
 **Functional Requirements:**
-- **Asynchronous Messaging Gateway:** The system must handle real-time webhooks from Telegram (and later WhatsApp).
-- **Dual-AI Pipeline:** Integration of Faster-Whisper for Speech-to-Text and Ollama for structured JSON extraction (Amount, Category, Concept).
+- **Asynchronous Messaging Gateway (n8n):** The system must handle real-time webhooks from Telegram and WhatsApp, manage Meta's media download APIs, and route text/audio payloads to the FastAPI core.
+- **Dual-AI Pipeline:** Integration of Faster-Whisper for Speech-to-Text and Ollama for structured JSON extraction (Amount, Category, Concept) within the secure FastAPI app.
 - **Conversational Query Logic:** A natural language query engine to handle the "ASK" functionality.
 - **Multi-tenant Ledger:** A database schema designed around "Family" units for data isolation.
-- **Silent Mirroring:** A background task system to synchronize local records with Notion for premium users.
+- **Silent Mirroring (n8n):** An n8n workflow system to synchronize local records with Notion databases for premium users.
 
 **Non-Functional Requirements:**
 - **Performance (The Hard Constraint):** The 3-second rule requires extreme optimization of the AI pipeline.
@@ -56,12 +56,12 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 1.  **FastAPI Full Stack (Tiangolo):** Evaluated for its robustness but rejected due to excessive frontend overhead (React/Vue) not required for the messaging-first MVP.
 2.  **NestJS (TypeScript):** Evaluated for its enterprise structure but rejected in favor of Python for better native integration with Ollama and Faster-Whisper.
-3.  **Modular FastAPI + Podman (Selected):** A custom structured approach optimized for AI orchestration and local hardware resource management.
+3.  **FastAPI + n8n Hybrid Gateway (Selected):** A modular architecture combining self-hosted n8n (Community Edition) for channel connections and Notion integration, alongside a core FastAPI backend for secure local AI processing, multi-tenant databases, and field-level encryption.
 
-### Selected Starter: Modular FastAPI Blueprint
+### Selected Starter: Modular FastAPI + n8n Blueprint
 
 **Rationale for Selection:**
-This approach provides surgical control over the AI pipeline latency, allowing for the fine-tuning of background tasks and VRAM management (Faster-Whisper vs. Ollama) needed to hit the 3-second rule.
+This hybrid approach provides the absolute fastest speed-to-market for Telegram and WhatsApp webhooks via n8n's visual node orchestrator, while preserving the strict privacy, performance, and field-level database encryption managed inside our secure, compiled FastAPI Python backend.
 
 **Initialization Command:**
 
@@ -96,14 +96,15 @@ FastAPI auto-generated Swagger UI and Uvicorn hot-reloading.
 ### Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
-- **Data Privacy:** Application-Level AES-256 Encryption (FastAPI handles encryption before DB write).
-- **Inference Engine:** Ollama (LLM) and Faster-Whisper (STT) for local execution.
+- **Data Privacy:** Application-Level AES-256 Encryption (FastAPI handles encryption inside Python before writing to Postgres).
+- **Inference Engine:** Ollama (LLM) and Faster-Whisper (STT) for local execution via Python service wrappers.
+- **Messaging Router:** Self-hosted n8n (Community Edition) to handle WhatsApp Cloud API and Telegram Webhook ingestion.
 - **Async Strategy:** FastAPI `BackgroundTasks` for non-blocking 3s confirmation loops.
 
 **Important Decisions (Shape Architecture):**
 - **Multi-Tenancy:** Shared schema with `family_id` scoping and row-level filtering.
 - **ORM:** SQLModel for unified Pydantic/SQLAlchemy modeling.
-- **Authentication:** Telegram User ID as the primary key, verified via Telegram Webhook secrets.
+- **Authentication:** Telegram and WhatsApp User IDs mapped to `User` and `Family` tables, routed and verified via n8n/FastAPI payload tokens.
 
 **Deferred Decisions (Post-MVP):**
 - **Distributed Workers:** Migration to Celery/Redis deferred until Phase 2 scaling (>10 users).
@@ -123,8 +124,9 @@ FastAPI auto-generated Swagger UI and Uvicorn hot-reloading.
 
 ### API & Communication Patterns
 
-- **API Style:** REST (FastAPI) for internal logic and Telegram Webhooks.
-- **Asynchrony:** The STT -> LLM pipeline is triggered via `BackgroundTasks` to allow the immediate sending of the "Processing..." or "Log Confirmed" message.
+- **API Style:** REST (FastAPI) exposing a secure, internal `/api/v1/message` router to receive standardized message payloads from n8n.
+- **Payload Schema:** `{ "user_id": int/str, "channel": "telegram"|"whatsapp", "username": str, "text": str, "audio_url": str }`
+- **Asynchrony:** n8n immediately acknowledges incoming webhooks from Meta/Telegram. It then sends a request to FastAPI. FastAPI uses `BackgroundTasks` to orchestrate transcription and extraction and instructs n8n to send the final confirmation message.
 
 ### Decision Impact Analysis
 
@@ -193,26 +195,28 @@ The Encryption Utility is a "Hard Dependency" for the Database layer; no transac
 
 ```text
 famfin-ai/
-├── podman-compose.yaml      # Multi-container orchestration (FastAPI + Postgres)
-├── .env.example             # Template for Bot Tokens & Encryption Keys
+├── docker-compose.yaml      # Multi-container orchestration (FastAPI + Postgres + n8n)
+├── .env.example             # Template for Bot Tokens, Encryption Keys, and n8n environment
 ├── requirements.txt         # Core dependencies (FastAPI, SQLModel, Ollama, etc.)
+├── n8n/                     # n8n workflows and configurations
+│   └── workflows/           # Backup of JSON configurations for n8n workflows
 ├── src/
 │   ├── main.py              # FastAPI application entry & global exception handlers
 │   ├── api/                 # Endpoint logic & request routing
 │   │   ├── routes/
-│   │   │   ├── logging.py   # Voice/Text log handlers
+│   │   │   ├── message.py   # Standardized endpoint to process message payloads from n8n
 │   │   │   ├── queries.py   # The "ASK" query handlers
 │   │   │   └── family.py    # Family management (Phase 2)
 │   │   └── deps.py          # FastAPI Dependables (Current Family Context, DB Session)
 │   ├── core/                # Cross-cutting system logic
 │   │   ├── config.py        # Pydantic Settings (Environment validation)
-│   │   ├── security.py      # Telegram HMAC signature verification
+│   │   ├── security.py      # Internal webhook security verification
 │   │   └── encryption.py    # AES-256 Application-level encryption service
 │   ├── services/            # Implementation of the "Inference Pipeline"
 │   │   ├── ai_orchestrator.py # Manages the 3s STT -> LLM flow
 │   │   ├── whisper_service.py # Faster-Whisper wrapper
 │   │   ├── extraction_service.py # Ollama LLM wrapper (JSON Mode)
-│   │   └── notion_mirror.py   # Background sync service (Phase 2)
+│   │   └── notion_mirror.py   # Notion mirroring logic (Phase 2)
 │   └── db/
 │       ├── session.py       # SQLAlchemy engine & session factory
 │       └── models.py        # Unified SQLModel schemas (User, Transaction, Family)

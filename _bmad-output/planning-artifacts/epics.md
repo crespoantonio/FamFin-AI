@@ -18,8 +18,8 @@ This document provides the complete epic and story breakdown for FamFin-AI, deco
 
 ### Functional Requirements
 
-FR1: Users can log transactions via natural language text in Telegram.
-FR2: Users can log transactions via natural language voice notes in Telegram.
+FR1: Users can log transactions via natural language text in Telegram and WhatsApp.
+FR2: Users can log transactions via natural language voice notes in Telegram and WhatsApp.
 FR3: System extracts Amount, Category, and Concept from unstructured inputs.
 FR4: System automatically timestamps all entries.
 FR5: Users can specify currencies for individual transactions.
@@ -29,8 +29,8 @@ FR8: Users can query spending history filtered by specific categories.
 FR9: System provides conversational summaries of financial history.
 FR10: Users can establish shared Family Groups with invited members. (Phase 2)
 FR11: All members of a Family Group can view and contribute to a shared ledger. (Phase 2)
-FR12: Premium users can synchronize local records to a Notion database. (Phase 2)
-FR13: Users can manually trigger a synchronization to the Notion mirror. (Phase 2)
+FR12: Premium users can synchronize local records to a Notion database via n8n. (Phase 2)
+FR13: Users can manually trigger a synchronization to the Notion mirror via n8n. (Phase 2)
 FR14: Users can export transaction history in CSV/JSON format (GDPR Portability).
 FR15: Users can permanently delete their account and data (Right to be Forgotten).
 FR16: Users authenticate/register simply by initiating a chat with the bot.
@@ -48,12 +48,12 @@ NFR8: Retry mechanisms for Notion mirroring (eventual consistency). (Consistency
 
 ### Additional Requirements
 
-- **Starter Template:** Initialize repository with Podman and FastAPI using `pip install fastapi[all] sqlmodel cryptography ollama faster-whisper python-telegram-bot`.
-- **Encryption:** Implement application-level AES-256 encryption using the `cryptography` library (Fernet).
-- **Inference:** Orchestrate Faster-Whisper (STT) and Ollama (LLM) in a non-blocking `BackgroundTasks` pipeline.
+- **Starter Template:** Initialize repository with Podman Compose running FastAPI, PostgreSQL, and n8n Community Edition using `pip install fastapi[all] sqlmodel cryptography ollama faster-whisper`.
+- **Encryption:** Implement application-level AES-256 encryption using the `cryptography` library (Fernet) inside Python.
+- **Inference:** Orchestrate Faster-Whisper (STT) and Ollama (LLM) inside the FastAPI app in a non-blocking `BackgroundTasks` pipeline.
 - **Monitoring:** Implement a "3s Audit" instrumentation to log execution time of the AI services.
 - **Tenancy:** Enforce `family_id` scoping on all database queries and models.
-- **Security:** Verify Telegram HMAC signatures for all incoming webhooks.
+- **Security:** Verify standardized authentication tokens for all incoming messages from n8n.
 
 ### UX Design Requirements
 
@@ -118,8 +118,8 @@ So that I have a consistent, "Cloud-Ready" development environment.
 
 **Given** a clean directory
 **When** I run `podman-compose up`
-**Then** a FastAPI server and a PostgreSQL database are running and connected.
-**And** all core dependencies (`sqlmodel`, `cryptography`, `python-telegram-bot`) are installed.
+**Then** a FastAPI server, an n8n workflow engine instance, and a PostgreSQL database are running and connected.
+**And** all core dependencies (`sqlmodel`, `cryptography`, `ollama`) are installed.
 
 ### Story 1.2: Application-Level AES-256 Encryption Service
 
@@ -147,18 +147,19 @@ So that I can store data with strict isolation and security.
 **Then** the `Transaction` model includes a mandatory `family_id` foreign key.
 **And** sensitive fields (Amount, Concept) are stored as BLOB/String to support ciphertext.
 
-### Story 1.4: Telegram Gateway & Registration Flow
+### Story 1.4: Generic Messaging API & Registration Flow
 
 As a User,
-I want to register and authenticate by simply starting a chat with the bot,
+I want to register and authenticate simply by sending a message on Telegram or WhatsApp,
 So that I have a zero-friction onboarding experience.
 
 **Acceptance Criteria:**
 
-**Given** a valid Telegram Webhook secret
-**When** a new user sends `/start` to the bot
-**Then** the system verifies the HMAC signature.
-**And** creates a new `User` and `Family` record in the database if they don't exist.
+**Given** a request from n8n with standardized user payload and verification token
+**When** the request hits the `/api/v1/message` endpoint
+**Then** the system verifies the verification token.
+**And** creates or retrieves the `User` and `Family` record in the database atomically.
+**And** returns a standardized welcome payload if it is the user's first interaction.
 
 ## Epic 2: Zero-Friction Expense Logging
 
@@ -167,14 +168,14 @@ Build the core 3-second pipeline. Users can record voice or text notes and get s
 ### Story 2.1: Faster-Whisper Transcription Service
 
 As a User,
-I want to send voice notes,
+I want to log expenses via voice notes,
 So that I can log expenses without typing.
 
 **Acceptance Criteria:**
 
-**Given** an OGG/MP3 audio file from Telegram
-**When** I pass it to the `WhisperService`
-**Then** it returns a high-accuracy text transcription.
+**Given** an audio payload (URL or binary stream) fetched from Telegram or WhatsApp via n8n
+**When** the FastAPI backend processes the media through `WhisperService`
+**Then** it transcribes the speech to text with high accuracy.
 **And** execution time is logged for the "3s Audit."
 
 ### Story 2.2: Ollama JSON Extraction Service
@@ -198,11 +199,11 @@ So that I don't have to wait for the bot to finish processing.
 
 **Acceptance Criteria:**
 
-**Given** an incoming text or voice message
-**When** the message is received by the webhook
+**Given** an incoming message from Telegram or WhatsApp routed via n8n
+**When** the payload is received by the FastAPI `/api/v1/message` endpoint
 **Then** the system triggers the AI pipeline in a `BackgroundTasks` loop.
-**And** immediately returns a 200 OK to Telegram.
-**And** sends a "Processing..." or "Log Confirmed" message to the user as soon as the background task completes.
+**And** immediately returns a `200 OK` (with status: "processing") to n8n.
+**And** pushes the final transaction confirmation (or error/clarification request) back to the user via an n8n callback trigger once processing completes.
 
 ### Story 2.4: Transaction Persistence with Encryption
 
@@ -359,20 +360,20 @@ So that I can link my bot records to my existing financial workspace.
 **Then** the system validates the token and retrieves the list of available databases.
 **And** stores the `notion_database_id` securely for that family.
 
-### Story 6.2: Real-Time Log Mirroring
+### Story 6.2: Real-Time Log Mirroring (via n8n)
 
 As a User,
-I want every new log I make in Telegram to automatically appear in Notion,
+I want every new log I make to automatically appear in Notion,
 So that my dashboard is always up to date without manual effort.
 
 **Acceptance Criteria:**
 
 **Given** a successfully saved local transaction
 **When** mirroring is enabled for the family
-**Then** the `NotionMirrorService` creates a new page in the target database with the Amount, Category, and Concept.
-**And** the sync status is logged for auditing.
+**Then** the FastAPI backend triggers a callback to the n8n Notion workflow.
+**And** n8n creates a new database row in Notion with the amount, category, and concept.
 
-### Story 6.3: Retry Mechanism for Mirroring Failures
+### Story 6.3: Retry Mechanism for Mirroring (via n8n)
 
 As a User,
 I want the system to retry syncing my logs if Notion is temporarily down,
@@ -380,7 +381,7 @@ So that I never lose a record in my primary dashboard.
 
 **Acceptance Criteria:**
 
-**Given** a failed sync attempt to Notion
-**When** the failure is detected
-**Then** the system flags the transaction for retry and attempts to resync in the background (exponential backoff).
-**And** notifies the user if the sync fails after multiple attempts.
+**Given** a temporary Notion API failure
+**When** the sync is attempted via n8n
+**Then** n8n uses its built-in node retry and error-routing mechanisms to retry the request (with exponential backoff).
+**And** logs failures visually inside the n8n execution history.

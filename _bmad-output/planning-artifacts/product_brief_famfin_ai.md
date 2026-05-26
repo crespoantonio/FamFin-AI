@@ -30,13 +30,14 @@ FamFin AI is a messaging-based (Telegram/WhatsApp) SaaS that allows users to log
 - **Visual Insights:** Automated generation of charts (Pie/Bar) sent directly to the chat.
 - **Budget Alerts:** Proactive notifications when category limits are reached.
 
-## 4. Technical Stack (The \"Low-Cost/Local\" Stack)
-- **Backend:** Python (FastAPI) for AI processing + Node.js (Fastify) for user management/webhooks.
-- **Database:** PostgreSQL with Drizzle ORM (Crypted fields for PII).
+## 4. Technical Stack (The "Low-Cost/Local" Stack)
+- **Core API & DB:** Python (FastAPI) + SQLModel for secure AI processing, application-level field-encryption, and multi-tenant ledger.
+- **Integration & Messaging Gateway:** Self-hosted n8n (Community Edition) for Telegram and WhatsApp Cloud API webhook routing, binary audio downloading, and Notion mirroring.
+- **Database:** PostgreSQL (encrypted fields for PII).
 - **AI Models (Local/Ollama):** 
   - **LLM:** Ollama running Phi-3 or Llama 3.1 (Strict JSON Mode).
   - **STT:** Faster-Whisper (Tiny/Base model).
-- **Interface:** Telegram Bot API (MVP), WhatsApp Cloud API (Scale).
+- **Interface:** Telegram and WhatsApp via n8n integration gateway (MVP/Scale).
 
 ## 5. Privacy & Security Invariants (Spec-Driven)
 - **GDPR Compliance:** Full adherence to EU data standards via Estonian entity.
@@ -50,8 +51,8 @@ FamFin AI is a messaging-based (Telegram/WhatsApp) SaaS that allows users to log
 - **Family Plan:** Multi-user synchronization, shared budgets, and member-level privacy controls.
 
 ## 7. Roadmap (BMAD Method)
-- **Phase 1 (Discovery):** Define `architecture.md` and `schema.sql` for multi-tenant privacy.
-- **Phase 2 (MVP):** Telegram Bot with text-to-JSON extraction (Ollama).
-- **Phase 3 (Voice):** Implementation of Whisper for local audio processing.
-- **Phase 4 (Social):** Family group logic and shared reporting.
-- **Phase 5 (Scale):** WhatsApp integration and Stripe payment gateway.
+- **Phase 1 (Discovery):** Define `architecture.md` and database models for multi-tenant privacy.
+- **Phase 2 (MVP):** Hybrid Architecture (FastAPI + n8n) supporting both Telegram and WhatsApp text & voice-to-JSON expense logging.
+- **Phase 3 (Ask):** Conversational AI query engine (Ollama RAG-lite) for weekly/monthly totals.
+- **Phase 4 (Social):** Family group logic, shared reporting, and shared budgets.
+- **Phase 5 (Scale):** Premium Notion Mirroring and Stripe payment gateway.

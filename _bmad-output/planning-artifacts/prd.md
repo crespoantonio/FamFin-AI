@@ -30,7 +30,7 @@ workflowType: prd
 **Date:** 2026-05-08
 
 ## 1. Executive Summary
-FamFin AI is an "invisible" financial companion designed to solve the chronic problem of expense tracking friction for solo entrepreneurs and families. By living directly within Telegram and leveraging local AI (Ollama and Whisper), FamFin AI enables zero-friction, privacy-centric expense logging via natural language audio and text. Users manage their finances through conversational interaction, receiving instant text confirmations and querying their spending history without ever leaving their primary messaging app.
+FamFin AI is an "invisible" financial companion designed to solve the chronic problem of expense tracking friction for solo entrepreneurs and families. By living directly within Telegram and WhatsApp (orchestrated via self-hosted n8n) and leveraging local AI (Ollama and Whisper), FamFin AI enables zero-friction, privacy-centric expense logging via natural language audio and text. Users manage their finances through conversational interaction, receiving instant text confirmations and querying their spending history without ever leaving their primary messaging app.
 
 ### Core Differentiator
 The elimination of "App Fatigue" through a zero-friction entry model. While traditional finance tools require manual data entry into specialized interfaces, FamFin AI allows users to record expenses in seconds via voice notes processed locally, ensuring sensitive financial data never leaves the user's controlled infrastructure.
@@ -61,7 +61,7 @@ Sam is leaving a meeting and records a $15 coffee expense via voice note. The lo
 Quinton asks, "How much did I spend on hardware this month?" The bot queries the local database and uses the LLM to provide a conversational summary and comparison to last month.
 
 ### 3.3 The Integrated Dashboard (Noah)
-Noah connects his Notion account. Every log he makes in Telegram is processed locally and then mirrored to his Notion workspace for high-level visualization.
+Noah connects his Notion account. Every log he makes in Telegram or WhatsApp is processed locally and then mirrored to his Notion workspace for high-level visualization.
 
 ### 3.4 The Shared Reality (Paula)
 Paula asks the shared family bot for the grocery balance. The bot aggregates data from all family members and confirms they have $80 remaining for the month.
@@ -72,14 +72,15 @@ In a noisy environment, the AI fails to extract an amount. The bot conversationa
 ## 4. Phased Development Roadmap
 
 ### Phase 1: MVP (V1)
-*   **Telegram Interface:** Voice and text note handling via webhooks.
-*   **Local AI Pipeline:** Faster-Whisper (STT) + Ollama (JSON Extraction).
+*   **Messaging Gateway (n8n):** Telegram and WhatsApp voice and text note handling routed via self-hosted n8n.
+*   **Secure Core API (FastAPI):** Application-level encryption and multi-tenant ledger management.
+*   **Local AI Pipeline:** Faster-Whisper (STT) + Ollama (JSON Extraction) integrated with FastAPI.
 *   **"ASK" Functionality:** Conversational queries for weekly/monthly totals.
-*   **Privacy Core:** Local Postgres storage with encrypted fields.
-*   **Infrastructure:** Hosted on personal hardware (Beta limit: first 10 users).
+*   **Privacy Core:** Local Postgres storage with field-level encryption.
+*   **Infrastructure:** Hosted on personal hardware via Podman Compose (Beta limit: first 10 users).
 
 ### Phase 2: Growth (V2)
-*   **Notion Mirror:** Premium integration to push logs to user Notion databases.
+*   **Notion Mirror:** Premium integration to push logs to user Notion databases using n8n workflows.
 *   **Family Groups:** Multi-user sync and shared ledgers (Flat permission model).
 *   **Proactive Insights:** Behavioral nudges and spending trend alerts.
 *   **Infrastructure Scaling:** Migration to a secure, containerized HA-VPS.
@@ -92,8 +93,8 @@ In a noisy environment, the AI fails to extract an amount. The bot conversationa
 ## 5. Functional Requirements
 
 ### 5.1 Expense Logging
-*   **FR1:** Users can log transactions via natural language text in Telegram.
-*   **FR2:** Users can log transactions via natural language voice notes in Telegram.
+*   **FR1:** Users can log transactions via natural language text in Telegram and WhatsApp.
+*   **FR2:** Users can log transactions via natural language voice notes in Telegram and WhatsApp.
 *   **FR3:** System extracts Amount, Category, and Concept from unstructured inputs.
 *   **FR4:** System automatically timestamps all entries.
 *   **FR5:** Users can specify currencies for individual transactions.
@@ -107,7 +108,7 @@ In a noisy environment, the AI fails to extract an amount. The bot conversationa
 ### 5.3 Family & Mirroring (Phase 2)
 *   **FR10:** Users can establish shared Family Groups with invited members.
 *   **FR11:** All members of a Family Group can view and contribute to a shared ledger.
-*   **FR12:** Premium users can synchronize local records to a Notion database.
+*   **FR12:** Premium users can synchronize local records to a Notion database via the n8n integration gateway.
 *   **FR13:** Users can manually trigger a synchronization to the Notion mirror.
 
 ### 5.4 Privacy & Data Rights
