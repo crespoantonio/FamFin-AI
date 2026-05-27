@@ -2,26 +2,26 @@ from typing import Dict, Any, Tuple
 from sqlmodel import Session, select
 from src.db.models import User, Family
 
-class TelegramService:
+class MessagingService:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_or_create_user_and_family(self, telegram_user_data: Dict[str, Any]) -> Tuple[User, Family]:
+    def get_or_create_user_and_family(self, user_data: Dict[str, Any]) -> Tuple[User, Family]:
         """
-        Retrieves an existing user by telegram_id or creates a new User and Family.
+        Retrieves an existing user by platform ID (telegram_id) or creates a new User and Family.
         Updates user info (username, full_name) if it has changed.
         """
-        telegram_id = telegram_user_data.get("id")
-        if not telegram_id:
-            raise ValueError("Telegram ID is required")
+        platform_id = user_data.get("id")
+        if not platform_id:
+            raise ValueError("User ID is required")
 
-        username = telegram_user_data.get("username")
-        first_name = telegram_user_data.get("first_name", "")
-        last_name = telegram_user_data.get("last_name", "")
+        username = user_data.get("username")
+        first_name = user_data.get("first_name", "")
+        last_name = user_data.get("last_name", "")
         full_name = f"{first_name} {last_name}".strip() or None
 
         # Check for existing user
-        statement = select(User).where(User.telegram_id == telegram_id)
+        statement = select(User).where(User.telegram_id == platform_id)
         user = self.session.exec(statement).first()
 
         if user:
@@ -50,7 +50,7 @@ class TelegramService:
         self.session.flush() # Get family.id without committing
 
         user = User(
-            telegram_id=telegram_id,
+            telegram_id=platform_id,
             username=username,
             full_name=full_name,
             family_id=family.id

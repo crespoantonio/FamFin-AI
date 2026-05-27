@@ -23,12 +23,13 @@ python scripts/generate_key.py
 Copy the output into `ENCRYPTION_KEY` in your `.env`.
 
 ### 4. Launch the Application
-Start the containerized environment (FastAPI + PostgreSQL):
+Start the containerized environment (FastAPI + PostgreSQL + n8n):
 ```bash
 podman compose up -d --build
 ```
 
-The API will be available at: [http://localhost:8000](http://localhost:8000)
+- The API will be available at: [http://localhost:8000](http://localhost:8000)
+- The n8n workflow engine dashboard will be available at: [http://localhost:5678](http://localhost:5678)
 
 ---
 
@@ -72,4 +73,4 @@ podman compose logs -f app
 
 ## 📅 Sprint Status
 The project progress is tracked in `_bmad-output/implementation-artifacts/sprint-status.yaml`.
-Currently in **Epic 1: Project Foundation**.
+**Epic 1: Privacy-First Foundation** is completed. Ready to begin **Epic 2: Zero-Friction Expense Logging**.

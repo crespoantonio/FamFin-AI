@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     
     # Security
     ENCRYPTION_KEY: str
-    TELEGRAM_BOT_TOKEN: str
-    TELEGRAM_WEBHOOK_SECRET: str = ""
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
+    MESSAGING_WEBHOOK_SECRET: str = ""
     
     # Configuration
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)

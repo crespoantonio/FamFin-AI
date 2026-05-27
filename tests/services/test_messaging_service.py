@@ -1,7 +1,7 @@
 import pytest
 from sqlmodel import Session, create_engine, SQLModel
 from src.db.models import User, Family
-from src.services.telegram_service import TelegramService
+from src.services.messaging_service import MessagingService
 
 # Setup in-memory SQLite for testing
 @pytest.fixture(name="session")
@@ -12,15 +12,15 @@ def session_fixture():
         yield session
 
 def test_get_or_create_user_new_user(session: Session):
-    service = TelegramService(session)
-    telegram_data = {
+    service = MessagingService(session)
+    user_data = {
         "id": 12345,
         "username": "testuser",
         "first_name": "Test",
         "last_name": "User"
     }
     
-    user, family = service.get_or_create_user_and_family(telegram_data)
+    user, family = service.get_or_create_user_and_family(user_data)
     
     assert user.telegram_id == 12345
     assert user.username == "testuser"
@@ -48,17 +48,17 @@ def test_get_or_create_user_existing_user(session: Session):
     session.add(user)
     session.commit()
     
-    service = TelegramService(session)
-    telegram_data = {
+    service = MessagingService(session)
+    user_data = {
         "id": 12345,
         "username": "existing_updated", # Changed username
         "first_name": "Existing",
         "last_name": "User"
     }
     
-    returned_user, returned_family = service.get_or_create_user_and_family(telegram_data)
+    returned_user, returned_family = service.get_or_create_user_and_family(user_data)
     
     assert returned_user.id == user.id
     assert returned_family.id == family.id
-    # Should update info if changed (optional, but good practice)
+    # Should update info if changed
     assert returned_user.username == "existing_updated"
