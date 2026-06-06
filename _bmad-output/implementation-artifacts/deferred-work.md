@@ -22,3 +22,7 @@
 
 - **Missing Concurrency Lock on WhisperModel Transcription**: Multiple concurrent voice notes might call `model.transcribe` concurrently on the singleton `WhisperModel` which is not thread-safe.
 - **Resource Inefficiency: Single-use AsyncClient**: A new `httpx.AsyncClient` is created for every orchestration task instead of using a shared client.
+
+## Deferred from: code review of 2-4-transaction-persistence-with-encryption.md (2026-06-06)
+
+- **Logging raw exception exposes potential database context details**: Logging raw `e` directly in `logger.error` might expose internal database error details if database connection parameters or SQL statement details are embedded in the exception object.
