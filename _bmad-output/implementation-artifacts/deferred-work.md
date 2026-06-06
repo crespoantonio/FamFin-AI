@@ -12,3 +12,8 @@
 
 - **Hardcoded transcription settings**: The parameters for transcription (e.g. beam_size=5) are hardcoded, preventing runtime custom configuration or tuning of transcription settings like temperature, VAD, or timestamp generation.
 - **Lack of concurrency limits**: Running CPU-bound transcription in threads using `asyncio.to_thread` without task queues or concurrent worker limits exposes the host system to CPU thrashing under concurrent load.
+
+## Deferred from: code review of 2-2-ollama-json-extraction-service.md (2026-06-06)
+
+- **Missing LLM request retry/fallback mechanisms**: In case of transient connection timeouts or LLM hallucination failures, the service raises an immediate ExtractionError instead of utilizing automated request retry (with backoff) or attempting secondary local models.
+- **Lack of secondary parsing fallback on Pydantic validation failure**: If Pydantic validation of the LLM response fails, the raw LLM output is discarded instead of attempting regex extraction or secondary prompts to recover the values.

@@ -1,6 +1,6 @@
 # Story 2.2: Ollama JSON Extraction Service
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -47,6 +47,21 @@ so that I can store precise financial records.
   - [x] Test the happy path using a mocked Ollama client response (verify correct parsing to Pydantic object).
   - [x] Test various currency and category mappings (e.g. "10 euros for lunch" -> `amount: 10.0`, `currency: "EUR"`, `category: "Food/Drink"`).
   - [x] Test extraction error paths (Ollama offline, malformed output).
+
+### Review Findings
+
+- [x] [Review][Patch] Weak URL validation in config Settings [src/core/config.py:35-40]
+- [x] [Review][Patch] Redundant classmethod decorators on field validators [src/core/config.py:27-47]
+- [x] [Review][Patch] Non-thread-safe singleton implementation [src/services/extraction_service.py:77-84]
+- [x] [Review][Patch] Missing validation on input text parameter [src/services/extraction_service.py:92]
+- [x] [Review][Patch] Missing code-level category normalization and fallback mapping [src/services/extraction_service.py:73]
+- [x] [Review][Patch] Missing code-level currency validation and mapping [src/services/extraction_service.py:75]
+- [x] [Review][Patch] Missing bounds validation on transaction amount [src/services/extraction_service.py:72]
+- [x] [Review][Patch] Missing Ollama client request timeout [src/services/extraction_service.py:107]
+- [x] [Review][Patch] Mismatched timing log audit prefix string [src/services/extraction_service.py:133]
+- [x] [Review][Patch] Narrow exception block on network/connection errors [src/services/extraction_service.py:123]
+- [x] [Review][Defer] Missing LLM request retry/fallback mechanisms [src/services/extraction_service.py:107] — deferred, pre-existing
+- [x] [Review][Defer] Lack of secondary parsing fallback on Pydantic validation failure [src/services/extraction_service.py:120] — deferred, pre-existing
 
 ## Dev Notes
 

@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 from src.services.extraction_service import ExtractionService, ExtractionResult, ExtractionError
 import ollama
@@ -39,16 +40,60 @@ async def test_extract_happy_path(service, mock_ollama_client):
     assert "format" in kwargs
 
 @pytest.mark.anyio
-async def test_extract_currency_mapping(service, mock_ollama_client):
+async def test_extract_validation_failures(service):
+    # Empty inputs raise ValueError
+    with pytest.raises(ValueError, match="Input text is empty"):
+        await service.extract("")
+    
+    with pytest.raises(ValueError, match="Input text is empty"):
+        await service.extract("   ")
+
+@pytest.mark.anyio
+async def test_extract_pydantic_amount_bounds():
+    # Transaction amount must be greater than 0
+    with pytest.raises(ValueError, match="Input should be greater than 0"):
+        ExtractionResult(amount=0.0, category="Food/Drink", concept="Starbucks")
+    with pytest.raises(ValueError, match="Input should be greater than 0"):
+        ExtractionResult(amount=-1.0, category="Food/Drink", concept="Starbucks")
+
+@pytest.mark.anyio
+async def test_extract_category_normalization(service, mock_ollama_client):
     mock_response = MagicMock()
-    mock_response.message.content = '{"amount": 10.0, "category": "Food/Drink", "concept": "Lunch", "currency": "EUR"}'
+    # Test lowercase standard categories map to their correctly cased equivalents
+    mock_response.message.content = '{"amount": 10.0, "category": "shopping", "concept": "Shoes", "currency": "USD"}'
+    mock_ollama_client.chat.return_value = mock_response
+    result = await service.extract("Bought shoes")
+    assert result.category == "Shopping"
+
+    # Test unknown category maps to "Other"
+    mock_response.message.content = '{"amount": 5.0, "category": "Crypto", "concept": "Bitcoin", "currency": "USD"}'
+    mock_ollama_client.chat.return_value = mock_response
+    result = await service.extract("Bought bitcoin")
+    assert result.category == "Other"
+
+@pytest.mark.anyio
+async def test_extract_currency_normalization(service, mock_ollama_client):
+    mock_response = MagicMock()
+    mock_response.message.content = '{"amount": 10.0, "category": "Food/Drink", "concept": "Lunch", "currency": "euros"}'
     mock_ollama_client.chat.return_value = mock_response
 
     result = await service.extract("10 euros for lunch")
-
     assert result.amount == 10.0
     assert result.currency == "EUR"
-    assert result.category == "Food/Drink"
+
+    # Test symbol mapping
+    mock_response.message.content = '{"amount": 10.0, "category": "Food/Drink", "concept": "Lunch", "currency": "€"}'
+    mock_ollama_client.chat.return_value = mock_response
+    result = await service.extract("10 euros for lunch")
+    assert result.currency == "EUR"
+
+@pytest.mark.anyio
+async def test_extract_timeout(service, mock_ollama_client):
+    # Mocking call to hang and raise TimeoutError
+    mock_ollama_client.chat.side_effect = asyncio.TimeoutError()
+
+    with pytest.raises(ExtractionError, match="Ollama request timed out"):
+        await service.extract("test")
 
 @pytest.mark.anyio
 async def test_extract_network_error(service, mock_ollama_client):

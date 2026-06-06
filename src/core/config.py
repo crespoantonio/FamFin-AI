@@ -27,7 +27,6 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "llama3"
     
     @field_validator("WHISPER_DEVICE")
-    @classmethod
     def validate_whisper_device(cls, v: str) -> str:
         allowed = {"cpu", "cuda", "auto"}
         if v.lower() not in allowed:
@@ -35,7 +34,6 @@ class Settings(BaseSettings):
         return v.lower()
 
     @field_validator("WHISPER_COMPUTE_TYPE")
-    @classmethod
     def validate_whisper_compute_type(cls, v: str) -> str:
         allowed = {"int8", "int8_float16", "int16", "float16", "float32", "default"}
         if v.lower() not in allowed:
@@ -43,14 +41,16 @@ class Settings(BaseSettings):
         return v.lower()
         
     @field_validator("OLLAMA_BASE_URL")
-    @classmethod
     def validate_ollama_base_url(cls, v: str) -> str:
+        from urllib.parse import urlparse
         if not v.startswith(("http://", "https://")):
             raise ValueError("OLLAMA_BASE_URL must start with http:// or https://")
+        parsed = urlparse(v)
+        if not parsed.netloc:
+            raise ValueError("OLLAMA_BASE_URL must contain a valid host (e.g. localhost or domain)")
         return v
 
     @field_validator("OLLAMA_MODEL")
-    @classmethod
     def validate_ollama_model(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("OLLAMA_MODEL cannot be empty")
