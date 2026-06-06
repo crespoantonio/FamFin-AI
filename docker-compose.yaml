@@ -33,6 +33,7 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     volumes:
       - .:/app
+      - whisper_model_cache:/root/.cache/huggingface
     depends_on:
       db:
         condition: service_healthy
@@ -51,6 +52,16 @@ services:
     depends_on:
       - app
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: famfin-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   postgres_data:
   n8n_data:
+  ollama_data:
+  whisper_model_cache:

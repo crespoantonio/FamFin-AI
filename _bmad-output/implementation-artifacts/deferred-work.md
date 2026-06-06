@@ -7,3 +7,8 @@
 ## Deferred from: code review of 1-3-multi-tenant-database-schema-sqlmodel.md (2026-05-09)
 
 - **Lack of Alembic/Migrations**: `create_all` is used for dev but no migration strategy (Alembic) is introduced for production readiness.
+
+## Deferred from: code review of 2-1-faster-whisper-transcription-service.md (2026-06-06)
+
+- **Hardcoded transcription settings**: The parameters for transcription (e.g. beam_size=5) are hardcoded, preventing runtime custom configuration or tuning of transcription settings like temperature, VAD, or timestamp generation.
+- **Lack of concurrency limits**: Running CPU-bound transcription in threads using `asyncio.to_thread` without task queues or concurrent worker limits exposes the host system to CPU thrashing under concurrent load.

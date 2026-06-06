@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -15,6 +16,27 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str
     TELEGRAM_BOT_TOKEN: Optional[str] = None
     MESSAGING_WEBHOOK_SECRET: str = ""
+    
+    # Whisper settings
+    WHISPER_MODEL_SIZE: str = "base"
+    WHISPER_DEVICE: str = "cpu"
+    WHISPER_COMPUTE_TYPE: str = "int8"
+    
+    @field_validator("WHISPER_DEVICE")
+    @classmethod
+    def validate_whisper_device(cls, v: str) -> str:
+        allowed = {"cpu", "cuda", "auto"}
+        if v.lower() not in allowed:
+            raise ValueError(f"WHISPER_DEVICE must be one of {allowed}")
+        return v.lower()
+
+    @field_validator("WHISPER_COMPUTE_TYPE")
+    @classmethod
+    def validate_whisper_compute_type(cls, v: str) -> str:
+        allowed = {"int8", "int8_float16", "int16", "float16", "float32", "default"}
+        if v.lower() not in allowed:
+            raise ValueError(f"WHISPER_COMPUTE_TYPE must be one of {allowed}")
+        return v.lower()
     
     # Configuration
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)

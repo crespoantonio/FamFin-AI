@@ -23,13 +23,31 @@ python scripts/generate_key.py
 Copy the output into `ENCRYPTION_KEY` in your `.env`.
 
 ### 4. Launch the Application
-Start the containerized environment (FastAPI + PostgreSQL + n8n):
+Start the containerized environment (FastAPI + PostgreSQL + n8n + Ollama):
 ```bash
 podman compose up -d --build
 ```
 
-- The API will be available at: [http://localhost:8000](http://localhost:8000)
-- The n8n workflow engine dashboard will be available at: [http://localhost:5678](http://localhost:5678)
+- **FastAPI API:** [http://localhost:8000](http://localhost:8000)
+- **n8n Workflow Engine:** [http://localhost:5678](http://localhost:5678)
+- **Ollama AI Inference:** [http://localhost:11434](http://localhost:11434)
+
+### 5. Download AI Models
+To prepare the system for transaction extraction and speech-to-text:
+```bash
+# Pull the lightweight LLM for transaction parsing
+podman compose exec ollama ollama pull gemma:2b
+```
+
+---
+
+## 🔗 n8n Webhook Integration
+
+To connect n8n with the FastAPI backend:
+1. Configure n8n to send parsed Telegram/WhatsApp payloads to `POST http://app:8000/api/v1/messages`.
+2. Include the authentication header:
+   * **Header Name:** `X-FamFin-Token`
+   * **Header Value:** The secret value you configured for `MESSAGING_WEBHOOK_SECRET` in your `.env` file.
 
 ---
 
