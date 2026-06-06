@@ -89,3 +89,37 @@ def test_webhook_success_registration(monkeypatch):
         assert user is not None
         assert user.username == "tony_test"
         assert user.full_name == "Tony Crespo"
+
+def test_webhook_transaction_processing(monkeypatch):
+    monkeypatch.setattr(settings, "MESSAGING_WEBHOOK_SECRET", "valid-secret")
+    
+    # We will just see if the route responds with processing
+    payload = {
+        "user": {
+            "id": 12345,
+            "username": "tony_test"
+        },
+        "message": {
+            "text": "50 for lunch",
+            "message_id": 2,
+            "chat_id": 12345,
+            "audio_url": "http://audio.url/test.ogg"
+        }
+    }
+    
+    # Mock AIOrchestrator
+    class MockOrchestrator:
+        async def orchestrate(self, user_id, text, audio_url, chat_id):
+            pass
+    monkeypatch.setattr("src.api.routes.messages.AIOrchestrator", MockOrchestrator)
+    
+    response = client.post(
+        "/api/v1/messages",
+        json=payload,
+        headers={"X-FamFin-Token": "valid-secret"}
+    )
+    
+    assert response.status_code == 200
+    res_data = response.json()
+    assert res_data["status"] == "processing"
+

@@ -17,3 +17,8 @@
 
 - **Missing LLM request retry/fallback mechanisms**: In case of transient connection timeouts or LLM hallucination failures, the service raises an immediate ExtractionError instead of utilizing automated request retry (with backoff) or attempting secondary local models.
 - **Lack of secondary parsing fallback on Pydantic validation failure**: If Pydantic validation of the LLM response fails, the raw LLM output is discarded instead of attempting regex extraction or secondary prompts to recover the values.
+
+## Deferred from: code review of 2-3-the-3-second-rule-orchestrator.md (2026-06-06)
+
+- **Missing Concurrency Lock on WhisperModel Transcription**: Multiple concurrent voice notes might call `model.transcribe` concurrently on the singleton `WhisperModel` which is not thread-safe.
+- **Resource Inefficiency: Single-use AsyncClient**: A new `httpx.AsyncClient` is created for every orchestration task instead of using a shared client.

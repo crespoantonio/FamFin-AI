@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Header, HTTPException, Depends
+from fastapi import APIRouter, Header, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
 from src.core.config import settings
 from src.core.security import verify_messaging_secret
 from src.services.messaging_service import MessagingService
+from src.services.ai_orchestrator import AIOrchestrator
 from src.db.session import get_session
 from sqlmodel import Session
 
@@ -17,6 +18,7 @@ class UserPayload(BaseModel):
 
 class MessagePayload(BaseModel):
     text: Optional[str] = None
+    audio_url: Optional[str] = None
     message_id: int
     chat_id: int
 
@@ -28,6 +30,7 @@ class WebhookPayload(BaseModel):
 @router.post("/")
 async def receive_message(
     payload: WebhookPayload,
+    background_tasks: BackgroundTasks,
     x_famfin_token: Optional[str] = Header(None),
     session: Session = Depends(get_session)
 ):
@@ -60,4 +63,14 @@ async def receive_message(
             "text": welcome_text
         }
 
-    return {"status": "ok", "user_id": str(user.id)}
+    # For transaction logging, process in background
+    orchestrator = AIOrchestrator()
+    background_tasks.add_task(
+        orchestrator.orchestrate,
+        user_id=str(user.id),
+        text=payload.message.text,
+        audio_url=payload.message.audio_url,
+        chat_id=payload.message.chat_id
+    )
+
+    return {"status": "processing"}
