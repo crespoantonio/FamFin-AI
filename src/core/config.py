@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     WHISPER_DEVICE: str = "cpu"
     WHISPER_COMPUTE_TYPE: str = "int8"
     
+    # Ollama settings
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3"
+    
     @field_validator("WHISPER_DEVICE")
     @classmethod
     def validate_whisper_device(cls, v: str) -> str:
@@ -37,6 +41,20 @@ class Settings(BaseSettings):
         if v.lower() not in allowed:
             raise ValueError(f"WHISPER_COMPUTE_TYPE must be one of {allowed}")
         return v.lower()
+        
+    @field_validator("OLLAMA_BASE_URL")
+    @classmethod
+    def validate_ollama_base_url(cls, v: str) -> str:
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("OLLAMA_BASE_URL must start with http:// or https://")
+        return v
+
+    @field_validator("OLLAMA_MODEL")
+    @classmethod
+    def validate_ollama_model(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("OLLAMA_MODEL cannot be empty")
+        return v.strip()
     
     # Configuration
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
