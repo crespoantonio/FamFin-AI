@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "FamFin-AI API",
+    "description": "Postman collection to test the entire FamFin-AI messaging pipeline.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. User Registration (/start)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-famfin-token",
+            "value": "{{WEBHOOK_SECRET}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"id\": 1001,\n    \"username\": \"testuser\",\n    \"first_name\": \"Tony\",\n    \"last_name\": \"Stark\"\n  },\n  \"message\": {\n    \"message_id\": 1,\n    \"chat_id\": 1001,\n    \"text\": \"/start\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/messages",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "messages"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Log Text Expense",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-famfin-token",
+            "value": "{{WEBHOOK_SECRET}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"id\": 1001,\n    \"username\": \"testuser\",\n    \"first_name\": \"Tony\",\n    \"last_name\": \"Stark\"\n  },\n  \"message\": {\n    \"message_id\": 2,\n    \"chat_id\": 1001,\n    \"text\": \"Bought a large coffee and a bagel for 8.50 at Starbucks.\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/messages",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "messages"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Log Audio Expense",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-famfin-token",
+            "value": "{{WEBHOOK_SECRET}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"id\": 1001,\n    \"username\": \"testuser\",\n    \"first_name\": \"Tony\",\n    \"last_name\": \"Stark\"\n  },\n  \"message\": {\n    \"message_id\": 3,\n    \"chat_id\": 1001,\n    \"text\": \"\",\n    \"audio_url\": \"https://example-audio-url.com/sample.ogg\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/messages",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "messages"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "WEBHOOK_SECRET",
+      "value": "your_messaging_secret_token_here"
+    }
+  ]
+}

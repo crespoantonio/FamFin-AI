@@ -31,6 +31,13 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-famfin_user}:${POSTGRES_PASSWORD:-famfin_password}@db:5432/${POSTGRES_DB:-famfin_db}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      MESSAGING_WEBHOOK_SECRET: ${MESSAGING_WEBHOOK_SECRET}
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE}
+      WHISPER_DEVICE: ${WHISPER_DEVICE}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      N8N_CALLBACK_URL: ${N8N_CALLBACK_URL}
     volumes:
       - .:/app
       - whisper_model_cache:/root/.cache/huggingface
