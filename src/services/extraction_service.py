@@ -104,7 +104,7 @@ Return ONLY the JSON matching the provided schema.'''
                     ],
                     format=ExtractionResult.model_json_schema(),
                 ),
-                timeout=10.0
+                timeout=60.0
             )
             
             content = response.message.content
@@ -116,7 +116,7 @@ Return ONLY the JSON matching the provided schema.'''
             
         except asyncio.TimeoutError as e:
             logger.error(f"Ollama request timed out: {e}")
-            raise ExtractionError("Ollama request timed out after 10.0 seconds")
+            raise ExtractionError("Ollama request timed out after 60.0 seconds")
         except (ollama.ResponseError, ollama.RequestError, ConnectionError, OSError) as e:
             logger.error(f"Ollama connection/API error: {e}")
             raise ExtractionError(f"Failed to communicate with Ollama: {e}")

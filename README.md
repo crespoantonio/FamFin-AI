@@ -35,16 +35,24 @@ podman compose up -d --build
 ### 5. Download AI Models
 To prepare the system for transaction extraction and speech-to-text:
 ```bash
-# Pull the lightweight LLM for transaction parsing
-podman compose exec ollama ollama pull gemma:2b
+# Pull the LLM for transaction parsing
+podman-compose exec ollama ollama pull llama3
 ```
+*Note: The Faster-Whisper audio transcription model is downloaded automatically the first time an audio request is processed.*
 
 ---
 
-## 🔗 n8n Webhook Integration
+## 🔗 Testing & n8n Webhook Integration
 
+### Using Postman
+You can test the entire pipeline locally without connecting Telegram/WhatsApp:
+1. Import the `FamFin_Postman_Collection.json` file into Postman.
+2. Ensure `podman-compose up -d` is running.
+3. Use the **1. User Registration (/start)** request, followed by the text or audio expense endpoints.
+
+### Connecting n8n
 To connect n8n with the FastAPI backend:
-1. Configure n8n to send parsed Telegram/WhatsApp payloads to `POST http://app:8000/api/v1/messages`.
+1. Configure an n8n HTTP Request node to send parsed Telegram/WhatsApp payloads to `POST http://app:8000/api/v1/messages`.
 2. Include the authentication header:
    * **Header Name:** `X-FamFin-Token`
    * **Header Value:** The secret value you configured for `MESSAGING_WEBHOOK_SECRET` in your `.env` file.
@@ -91,4 +99,4 @@ podman compose logs -f app
 
 ## 📅 Sprint Status
 The project progress is tracked in `_bmad-output/implementation-artifacts/sprint-status.yaml`.
-**Epic 1: Privacy-First Foundation** is completed. Ready to begin **Epic 2: Zero-Friction Expense Logging**.
+**Epic 1: Privacy-First Foundation** and **Epic 2: Zero-Friction Expense Logging** are fully completed. The backend pipeline is fully functional!

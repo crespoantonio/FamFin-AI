@@ -54,6 +54,7 @@ services:
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
+      - WEBHOOK_URL=https://e6b6-181-105-82-108.ngrok-free.app
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:

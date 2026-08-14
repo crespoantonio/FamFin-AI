@@ -29,11 +29,13 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/messages",
+          "raw": "{{BASE_URL}}/api/v1/messages",
           "host": [
             "{{BASE_URL}}"
           ],
           "path": [
+            "api",
+            "v1",
             "messages"
           ]
         }
@@ -63,11 +65,13 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/messages",
+          "raw": "{{BASE_URL}}/api/v1/messages",
           "host": [
             "{{BASE_URL}}"
           ],
           "path": [
+            "api",
+            "v1",
             "messages"
           ]
         }
@@ -97,11 +101,13 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/messages",
+          "raw": "{{BASE_URL}}/api/v1/messages",
           "host": [
             "{{BASE_URL}}"
           ],
           "path": [
+            "api",
+            "v1",
             "messages"
           ]
         }

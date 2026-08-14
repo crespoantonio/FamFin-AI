@@ -89,8 +89,28 @@ class WhisperService:
         # 2. Download audio if URL is provided
         if audio_url is not None:
             try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    response = await client.get(audio_url)
+                async with httpx.AsyncClient(timeout=20.0) as client:
+                    # If this is a Telegram getFile endpoint, resolve the real file path first
+                    target_url = audio_url
+                    if "api.telegram.org/bot" in audio_url and "getFile" in audio_url:
+                        get_file_resp = await client.get(audio_url)
+                        get_file_resp.raise_for_status()
+                        file_info = get_file_resp.json()
+                        if file_info.get("ok") and "result" in file_info and "file_path" in file_info["result"]:
+                            file_path = file_info["result"]["file_path"]
+                            # Extract bot token from URL: https://api.telegram.org/bot<TOKEN>/getFile...
+                            bot_token_part = audio_url.split("api.telegram.org/bot")[1].split("/")[0]
+                            target_url = f"https://api.telegram.org/file/bot{bot_token_part}/{file_path}"
+                    elif settings.TELEGRAM_BOT_TOKEN and not audio_url.startswith("http"):
+                        # If audio_url is just a Telegram file_id
+                        get_file_resp = await client.get(f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/getFile?file_id={audio_url}")
+                        get_file_resp.raise_for_status()
+                        file_info = get_file_resp.json()
+                        if file_info.get("ok") and "result" in file_info and "file_path" in file_info["result"]:
+                            file_path = file_info["result"]["file_path"]
+                            target_url = f"https://api.telegram.org/file/bot{settings.TELEGRAM_BOT_TOKEN}/{file_path}"
+
+                    response = await client.get(target_url)
                     response.raise_for_status()
                     
                     # Prevent DoS/OOM on huge files
